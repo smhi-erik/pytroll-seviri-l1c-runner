@@ -21,28 +21,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from seviri_l1c_runner import get_config
-
-from level1c4pps.seviri_hrit import process_one_scan
+from level1c4pps.seviri2pps_lib import process_one_scan  # @UnresolvedImport
+from posttroll.subscriber import Subscribe  # @UnresolvedImport
 from posttroll.publisher import Publish  # @UnresolvedImport
 from posttroll.message import Message  # @UnresolvedImport
 
 import logging
 import sys
 import os
-import six
-from posttroll.subscriber import Subscribe  # @UnresolvedImport
 from multiprocessing import cpu_count
+
+import six
 if six.PY2:
-    from urlparse import urlunsplit
+    from urlparse import urlunsplit  # @UnusedImport
 elif six.PY3:
-    from urllib.parse import urlunsplit  # @UnresolvedImport
+    from urllib.parse import urlunsplit  # @UnresolvedImport @Reimport
 import socket
 
-from seviri_l1c_runner.utils import (deliver_output_file, cleanup_workdir)
+from seviri_l1c_runner.utils import (deliver_output_file, cleanup_workdir, get_config)  # @UnresolvedImport
 
 SUPPORTED_METEOSAT_SATELLITES = ['meteosat-8', 'meteosat-9', 'meteosat-10', 'meteosat-11']
-
 
 #: Default time format
 _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -50,6 +48,8 @@ _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 #: Default log format
 _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 
+#: SMHI MODE
+MODE = os.environ.get('SMHI_MODE', 'utv')
 
 class ActiveL1cProcessor(object):
 
@@ -121,11 +121,23 @@ class ActiveL1cProcessor(object):
 
         if len(sdr_dataset) < 1:
             return False
-
+        
+        pro_files = False
+        epi_files = False
         sdr_files = []
         for sdr in sdr_dataset:
             sdr_filename = sdr['uri']
             sdr_files.append(sdr_filename)
+            if '-PRO' in sdr_filename:
+                pro_files = True
+            if '-EPI' in sdr_filename:
+                epi_files = True
+        if (pro_files == False) or (epi_files == False):
+            if (pro_files == False):
+                LOG.warning("PRO file is missing...")
+            if (epi_files == False):
+                LOG.warning("EPI file is missing...")
+            return False
 
         self.sdr_files = sdr_files
         self.cspp_results.append(self.pool.apply_async(process_one_scan, (self.sdr_files, self.working_home)))
@@ -232,18 +244,20 @@ def get_arguments():
     parser.add_argument('-c', '--config_file',
                         type=str,
                         dest='config_file',
-                        required=True,
+                        default='seviri_l1c_config.yaml',
                         help="The file containing " +
-                        "configuration parameters e.g. product_filter_config.yaml")
+                        "configuration parameters e.g. product_filter_config.yaml, \n" +
+                        "default = ./seviri_l1c_config.yaml")
     parser.add_argument("-s", "--service",
-                        help="Name of the service (e.g. iasi-lvl2)",
-                        dest="service",
                         type=str,
-                        required=True)
+                        dest="service",
+                        default='seviri-l1c',
+                        help="Name of the service (e.g. iasi-lvl2), \n" +
+                        "default = seviri-l1c")
     parser.add_argument("-l", "--logging",
+                        type=str,
                         help="The path to the log-configuration file (e.g. './logging.ini')",
                         dest="logging_conf_file",
-                        type=str,
                         required=False)
 
     args = parser.parse_args()
@@ -255,6 +269,7 @@ def get_arguments():
         sys.exit()
 
     return args.logging_conf_file, service, args.config_file
+
 
 if __name__ == '__main__':
     
@@ -272,7 +287,7 @@ if __name__ == '__main__':
     logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('posttroll').setLevel(logging.INFO)
 
-    environ = "utv"
+    environ = MODE
 
     OPTIONS = get_config(config_filename, service_name, environ)
 
