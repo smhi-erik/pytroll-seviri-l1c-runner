@@ -23,12 +23,6 @@
 """seviri-l1c-runner Package initializer
 """
 
-import yaml
-try:
-    from yaml import UnsafeLoader
-except ImportError:
-    from yaml import Loader as UnsafeLoader
-
 import os
 from pkg_resources import get_distribution, DistributionNotFound
 try:
@@ -36,24 +30,3 @@ try:
 except DistributionNotFound:
     # package is not installed
     pass
-
-
-def get_config(configfile, service, procenv):
-    """Get the configuration from file"""
-
-    with open(configfile, 'r') as fp_:
-        config = yaml.load(fp_, Loader=UnsafeLoader)
-
-    options = {}
-    for item in config:
-        if not isinstance(config[item], dict):
-            options[item] = config[item]
-        elif item in [service]:
-            for key in config[service]:
-                if not isinstance(config[service][key], dict):
-                    options[key] = config[service][key]
-                elif key in [procenv]:
-                    for memb in config[service][key]:
-                        options[memb] = config[service][key][memb]
-
-    return options

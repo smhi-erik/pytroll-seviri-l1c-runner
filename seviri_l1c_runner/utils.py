@@ -20,17 +20,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility functions for the SEVIRI HRIT to PPS level-1c format generation
-
+"""
+Utility functions for the SEVIRI HRIT to PPS level-1c format generation
 """
 
-import logging
 import os
 from glob import glob
 from datetime import datetime, timedelta
 import shutil
 import stat
 
+import yaml
+try:
+    from yaml import UnsafeLoader
+except ImportError:
+    from yaml import Loader as UnsafeLoader
+    
+import logging
 LOG = logging.getLogger(__name__)
 
 
@@ -65,7 +71,7 @@ def deliver_output_file(affile, base_dir, subdir=None):
             LOG.info("File at destination: {file} <> ST_MTIME={time}".format(file=str(newfilename),
                                                                              time=datetime.utcfromtimestamp(os.stat(newfilename)[stat.ST_MTIME]).strftime('%Y%m%d-%H%M%S')))
     else:
-        LOG.warning("File already exist. File: %s" % newfilename)
+        LOG.warning("File already exist. File: %s" %newfilename)
     retvl = newfilename
 
     return retvl
@@ -81,4 +87,25 @@ def cleanup_workdir(workdir):
         "Number of items left after cleaning working dir = " + str(len(filelist)))
 #     shutil.rmtree(workdir)
     return
+
+
+def get_config(configfile, service, procenv):
+    """Get the configuration from file"""
+
+    with open(configfile, 'r') as fp_:
+        config = yaml.load(fp_, Loader=UnsafeLoader)
+
+    options = {}
+    for item in config:
+        if not isinstance(config[item], dict):
+            options[item] = config[item]
+        elif item in [service]:
+            for key in config[service]:
+                if not isinstance(config[service][key], dict):
+                    options[key] = config[service][key]
+                elif key in [procenv]:
+                    for memb in config[service][key]:
+                        options[memb] = config[service][key][memb]
+
+    return options
 
