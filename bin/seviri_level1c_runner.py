@@ -203,9 +203,9 @@ def seviri_l1c_runner(options, service_name="unknown"):
         with Publish('seviri_l1c_runner', 0) as publisher:
             while True:
                 count = 0
-                af_proc.initialise(service_name)
                 for msg in sub.recv():
-                    count = count + 1
+                    af_proc.initialise(service_name)
+#                     count = count + 1
                     status = af_proc.run(msg)
                     if not status:
                         break  # end the loop and reinitialize !
