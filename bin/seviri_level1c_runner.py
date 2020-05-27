@@ -51,12 +51,9 @@ _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 #: SMHI MODE
 MODE = os.environ.get('SMHI_MODE', 'utv')
 
+
 class ActiveL1cProcessor(object):
-
-    """
-    Container for the SEVIRI HRET processing
-
-    """
+    """Container for the SEVIRI HRET processing."""
 
     def __init__(self, ncpus):
         from multiprocessing.pool import ThreadPool
@@ -79,7 +76,7 @@ class ActiveL1cProcessor(object):
         self.service = None
 
     def initialise(self, service):
-        """Initialise the processor"""
+        """Initialise the processor."""
         self.cspp_results = []
         self.pass_start_time = None
         self.result_files = []
@@ -93,7 +90,7 @@ class ActiveL1cProcessor(object):
         return deliver_output_file(self.result_file, self.result_home, subd)
 
     def run(self, msg):
-        """Start the L1c processing using process_one_scan"""
+        """Start the L1c processing using process_one_scan."""
 
         if not msg:
             return False
@@ -121,7 +118,7 @@ class ActiveL1cProcessor(object):
 
         if len(sdr_dataset) < 1:
             return False
-        
+
         pro_files = False
         epi_files = False
         sdr_files = []
@@ -145,8 +142,8 @@ class ActiveL1cProcessor(object):
 
 
 def publish_l1c(publisher, result_file, mda, **kwargs):
-    """Publish the messages that l1c files are ready
-    """
+    """Publish the messages that l1c files are ready."""
+
     if not result_file:
         return
 
@@ -188,7 +185,7 @@ def publish_l1c(publisher, result_file, mda, **kwargs):
 
 
 def seviri_l1c_runner(options, service_name="unknown"):
-    """The live runner for the SEVIRI  l1c product generation"""
+    """The live runner for the SEVIRI l1c product generation."""
 
     LOG.info("Start the SEVIRI l1C runner...")
     LOG.debug("Listens for messages of type: %s", str(options['message_types']))
@@ -202,7 +199,7 @@ def seviri_l1c_runner(options, service_name="unknown"):
     with Subscribe('', options['message_types'], True) as sub:
         with Publish('seviri_l1c_runner', 0) as publisher:
             while True:
-                count = 0
+#                 count = 0
                 for msg in sub.recv():
                     af_proc.initialise(service_name)
 #                     count = count + 1
@@ -233,7 +230,7 @@ def seviri_l1c_runner(options, service_name="unknown"):
 
 def get_arguments():
     """
-    Get command line arguments
+    Get command line arguments.
     Return
     name of the service and the config filepath
     """
@@ -272,12 +269,12 @@ def get_arguments():
 
 
 if __name__ == '__main__':
-    
+
     (logfile, service_name, config_filename) = get_arguments()
-    
+
     if logfile:
         logging.config.fileConfig(logfile)
-    
+
     handler = logging.StreamHandler(sys.stderr)
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(fmt=_DEFAULT_LOG_FORMAT,

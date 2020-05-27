@@ -21,12 +21,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Utility functions for the SEVIRI HRIT to PPS level-1c format generation
+Utility functions for the SEVIRI HRIT to PPS level-1c format generation.
 """
 
 import os
 from glob import glob
-from datetime import datetime, timedelta
+from datetime import datetime
 import shutil
 import stat
 
@@ -35,14 +35,15 @@ try:
     from yaml import UnsafeLoader
 except ImportError:
     from yaml import Loader as UnsafeLoader
-    
+
 import logging
 LOG = logging.getLogger(__name__)
 
 
 def deliver_output_file(affile, base_dir, subdir=None):
-    """Copy the Active Fire output files to the sub-directory under the *subdir* directory
-    structure"""
+    """Copy the Active Fire output files to the sub-directory under
+    the *subdir* directory structure
+    """
 
     LOG.debug("base_dir: %s", base_dir)
 
@@ -63,13 +64,15 @@ def deliver_output_file(affile, base_dir, subdir=None):
     newfilename = os.path.join(path, os.path.basename(affile))
     LOG.info("Copy affile to destination: " + newfilename)
     if os.path.exists(affile):
-        LOG.info("File to copy: {file} <> ST_MTIME={time}".format(file=str(affile),
-                                                                  time=datetime.utcfromtimestamp(os.stat(affile)[stat.ST_MTIME]).strftime('%Y%m%d-%H%M%S')))
+        LOG.info("File to copy: {file} <> ST_MTIME={time}".format(
+            file=str(affile),
+            time=datetime.utcfromtimestamp(os.stat(affile)[stat.ST_MTIME]).strftime('%Y%m%d-%H%M%S')))
     if not os.path.isfile(newfilename):
         shutil.copy(affile, newfilename)
         if os.path.isfile(newfilename):
-            LOG.info("File at destination: {file} <> ST_MTIME={time}".format(file=str(newfilename),
-                                                                             time=datetime.utcfromtimestamp(os.stat(newfilename)[stat.ST_MTIME]).strftime('%Y%m%d-%H%M%S')))
+            LOG.info("File at destination: {file} <> ST_MTIME={time}".format(
+                file=str(newfilename),
+                time=datetime.utcfromtimestamp(os.stat(newfilename)[stat.ST_MTIME]).strftime('%Y%m%d-%H%M%S')))
     else:
         LOG.warning("File already exist. File: %s" %newfilename)
     retvl = newfilename
@@ -78,7 +81,7 @@ def deliver_output_file(affile, base_dir, subdir=None):
 
 
 def cleanup_workdir(workdir):
-    """Clean up the working dir after processing"""
+    """Clean up the working dir after processing."""
 
     filelist = glob('%s/*' % workdir)
     dummy = [os.remove(s) for s in filelist if os.path.isfile(s)]
@@ -90,7 +93,7 @@ def cleanup_workdir(workdir):
 
 
 def get_config(configfile, service, procenv):
-    """Get the configuration from file"""
+    """Get the configuration from file."""
 
     with open(configfile, 'r') as fp_:
         config = yaml.load(fp_, Loader=UnsafeLoader)
@@ -108,4 +111,3 @@ def get_config(configfile, service, procenv):
                         options[memb] = config[service][key][memb]
 
     return options
-

@@ -21,7 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Setup for the pytroll runner to convert SEVIRI level 1.5 HRIT to PPS level-1c format
+"""
+Setup for the pytroll runner to convert SEVIRI level 1.5 HRIT to PPS level-1c format.
 """
 
 from setuptools import find_packages, setup
