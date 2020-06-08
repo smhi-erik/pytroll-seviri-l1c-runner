@@ -48,9 +48,6 @@ _DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 #: Default log format
 _DEFAULT_LOG_FORMAT = '[%(levelname)s: %(asctime)s : %(name)s] %(message)s'
 
-#: SMHI MODE
-MODE = os.environ.get('SMHI_MODE', 'utv')
-
 
 class ActiveL1cProcessor(object):
     """Container for the SEVIRI HRET processing."""
@@ -256,6 +253,12 @@ def get_arguments():
                         help="The path to the log-configuration file (e.g. './logging.ini')",
                         dest="logging_conf_file",
                         required=False)
+    parser.add_argument("-m", "--mode",
+                        type=str,
+                        dest="mode",
+                        default='utv',
+                        help="Environment. replaces SMHI_MODE \n" +
+                        "default = utv")
 
     args = parser.parse_args()
 
@@ -265,12 +268,12 @@ def get_arguments():
         print("Template file given as master config, aborting!")
         sys.exit()
 
-    return args.logging_conf_file, service, args.config_file
+    return args.logging_conf_file, service, args.config_file, args.mode
 
 
 if __name__ == '__main__':
 
-    (logfile, service_name, config_filename) = get_arguments()
+    (logfile, service_name, config_filename, environ) = get_arguments()
 
     if logfile:
         logging.config.fileConfig(logfile)
@@ -283,8 +286,6 @@ if __name__ == '__main__':
     logging.getLogger('').addHandler(handler)
     logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('posttroll').setLevel(logging.INFO)
-
-    environ = MODE
 
     OPTIONS = get_config(config_filename, service_name, environ)
 
